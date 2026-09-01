@@ -1,10 +1,7 @@
 # Visual-Algorithms — migration brief
 
-> **Working notes and session hand-off logs live in a local `HANDOFF.md` (not
-> committed). Every new session: read this file first, then `HANDOFF.md`.**
-> This file is written to a "an interviewer can read it" standard — keep out
-> internal asides, personal information, session-by-session logs, and meta
-> decisions about how the repo is presented publicly. Those go in `HANDOFF.md`.
+> The public-facing engineering brief for the migration — what changed and why.
+> Day-to-day working notes are kept in a local `HANDOFF.md` (not committed).
 
 ## Background
 
@@ -215,17 +212,16 @@ sensibly scoped:
 
 ## Deployment
 
-**Sequencing (decided by the owner, 2026-09-01):** finish Manacher, then finish
-Hare & Tortoise, and only **after all three algorithms are migrated** do the
-deployment + About page together. Do not set up deployment early (the
-before/after table is only complete with all three present).
+**Sequencing:** only **after all three algorithms are migrated** do the
+deployment + About page together — the before/after table is only complete with
+all three present, so deployment is not set up early.
 
 - Vercel connected to the GitHub repo, auto-deploy on push. Root Directory set
   to `app/`, framework Vite. `app/vercel.json` (SPA rewrite) is in place.
 - Keep the three algorithm sub-paths (`/kmp`, `/manacher`, `/floyd`); try not
   to let old links die.
-- **The old and new sites deployed together, one URL** (the owner wants this,
-  as proof the old version predates the AI era):
+- **The old and new sites deployed together, one URL** — as visible proof the
+  old version predates the AI era:
   - Approach: one Vercel deployment; after `vite build`, a small build script
     copies the repo-root 2021 files (`index.html` / `KMP/` / `Manachar/` /
     `hare-tortoise/` / `dist/` / `imgs/` / `examples.js`) into `dist/legacy/`.
@@ -242,11 +238,8 @@ before/after table is only complete with all three present).
 
 ## Miscellaneous
 
-- ~~The original `index.html` About section had a plaintext email that
-  crawlers would scrape~~ removed (2026-09-01 — a school alumni address the
-  owner no longer uses; the whole line was dropped. Contact goes through
-  LinkedIn from now on; the link was added when the React About page was built,
-  using a URL the owner provided).
+- Contact is via LinkedIn, linked from the About page. The repo and the pages
+  carry no email address.
 - The README states plainly: the 2021 original was hand-written vanilla
   JS + SVG; in 2026 it was migrated to React + TypeScript. The original commit
   history is preserved in the same repo.
@@ -254,46 +247,21 @@ before/after table is only complete with all three present).
   one go.
 - The wrap-up checklist after the project / deployment is done (interview
   notes, git-history clean-up, etc.) is in `HANDOFF.md`.
-
-## Working style
-
-- **The first thing in every new conversation: name the session with
-  `set_session_title`**, format `Phase N: short description` (e.g. `Phase 1:
-  KMP animation tab`, `Phase 2: Manacher flowchart`, `Misc: fix Vercel
-  deploy`), so the several conversations for this project can be found by
-  phase later. Rename once more if the conversation's scope clearly shifts.
-- On "I can't follow the original logic" or "this looks like a bug", stop and
-  ask — do not infer and then change it.
-- Technical explanations: give a small concrete example first, then the
-  abstract principle.
-- When the owner needs to understand the flow of an unfamiliar piece of code,
-  use a function-level flowchart (one node per function).
-- The directory `Hare&Tortoise/` is renamed to `hare-tortoise/`. `&` is a
-  special character in the shell and in URLs, and the original
-  `href="Hare&Tortoise/..."` in index.html was never well-formed. Use `git mv`
-  so file history is preserved.
-  - Done (2026-09-01): `git mv Hare&Tortoise/ hare-tortoise/`, all three files
-    (`.css` / `.html` / `.js`) renamed together; the `Hare&Tortoise.*` inside
-    the filenames is left for now (replaced wholesale during the React
-    migration). `index.html`'s `href="Hare&Tortoise/..."` updated to
-    `href="hare-tortoise/..."`; the sidebar cross-links pointing at
-    `../Hare&Tortoise/...` in `KMP/KMP.html`, `Manachar/Manachar.html` and
-    `hare-tortoise/Hare&Tortoise.html` updated too. Reason: `&` is a
-    background operator in the shell and a query separator in URLs — leaving it
-    bare breaks both links and command-line work.
+- The `Hare&Tortoise/` directory was renamed to `hare-tortoise/` (via `git mv`,
+  history preserved) and every cross-link updated. `&` is a background operator
+  in the shell and a query separator in URLs, so the bare name broke both
+  command-line work and the `href` in index.html.
 
 ## Progress
 
-- [x] Phase 1: scaffold + KMP (2026-09-01, all four tabs working)
-- [x] Phase 2: Manacher (2026-09-01 — main animation + data-driven flowchart +
-  the "why no outside comparison is needed" proof animation, all done)
-- [x] Phase 3: Hare & Tortoise (2026-09-01 — two-phase Floyd walkthrough +
-  along-the-ring animation + distance-identity derivation; ρ modelled as a
-  successor function running textbook Floyd, input a letter string + click the
-  cycle entrance)
-- [x] Deployment + About page (2026-09-02 — one Vercel deployment: `/` the
-  React version, `/legacy/` the 2021 version as-is, build script copies the old
-  files on demand; the `/about` route covers before/after + provenance; the
-  home-card walkthrough thumbnails are produced by the `npm run thumbnails`
-  script)
+- [x] Phase 1: scaffold + KMP (all four tabs working)
+- [x] Phase 2: Manacher (main animation + data-driven flowchart + the "why no
+  outside comparison is needed" proof animation)
+- [x] Phase 3: Hare & Tortoise (two-phase Floyd walkthrough + along-the-ring
+  animation + distance-identity derivation; ρ modelled as a successor function
+  running textbook Floyd, input a letter string + click the cycle entrance)
+- [x] Deployment + About page (one Vercel deployment: `/` the React version,
+  `/legacy/` the 2021 version as-is, build script copies the old files on
+  demand; the `/about` route covers before/after + provenance; the home-card
+  walkthrough thumbnails are produced by the `npm run thumbnails` script)
 - [ ] Phase 4: Spring Boot backend (undecided)
