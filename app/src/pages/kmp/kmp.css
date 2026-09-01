@@ -1,0 +1,14 @@
+.kmp-frame-status {
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--tab-active);
+  background: var(--panel-bg);
+  border-radius: 0 0.3rem 0.3rem 0;
+}
+
+.algo__desc code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--panel-bg);
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.2rem;
+}
