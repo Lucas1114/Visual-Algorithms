@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/KMP/:path*", "destination": "/legacy/KMP/:path*" },
+    { "source": "/Manachar/:path*", "destination": "/legacy/Manachar/:path*" },
+    { "source": "/hare-tortoise/:path*", "destination": "/legacy/hare-tortoise/:path*" }
+  ],
+  "rewrites": [
+    { "source": "/legacy", "destination": "/legacy/index.html" },
+    { "source": "/legacy/", "destination": "/legacy/index.html" },
+    { "source": "/((?!legacy).*)", "destination": "/index.html" }
+  ]
+}
