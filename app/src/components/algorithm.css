@@ -1,0 +1,183 @@
+:root {
+  --cell-fill: #fff;
+  --cell-stroke: #1a1a1a;
+  --cell-text: #1a1a1a;
+  --arrow: #1a1a1a;
+
+  --match: #2e7d32;
+  --match-fill: #d7efd8;
+  --mismatch: #c62828;
+  --mismatch-fill: #f7d5d5;
+  --highlight-fill: #fff3c4;
+
+  --panel-bg: #f5f5f5;
+  --tab-bg: #e9eef2;
+  --tab-active: #c62828;
+  --tab-active-text: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cell-fill: #1f2027;
+    --cell-stroke: #c9ccd4;
+    --cell-text: #f3f4f6;
+    --arrow: #f3f4f6;
+
+    --match: #7bd88f;
+    --match-fill: #2f6b41;
+    --mismatch: #f28b82;
+    --mismatch-fill: #7a3330;
+    --highlight-fill: #6b5f22;
+
+    --panel-bg: #1c1d23;
+    --tab-bg: #24262e;
+    --tab-active: #f28b82;
+    --tab-active-text: #16171d;
+  }
+}
+
+.algo {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 0.75rem 1.25rem;
+  min-height: 100dvh;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.algo--notabs {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+.algo__header {
+  grid-column: 1 / -1;
+}
+
+.algo__header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.algo__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.algo__tab {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border: 1px solid var(--cell-stroke);
+  border-radius: 0.35rem;
+  background: var(--tab-bg);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.algo__tab:hover {
+  border-color: var(--tab-active);
+  color: var(--tab-active);
+}
+
+.algo__tab[aria-current='true'] {
+  background: var(--tab-active);
+  border-color: var(--tab-active);
+  color: var(--tab-active-text);
+}
+
+.algo__panel {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.algo__desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.algo__desc h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+}
+
+.algo__desc button {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.1rem 0.4rem;
+}
+
+.algo__canvas {
+  overflow-x: auto;
+  background: var(--panel-bg);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+.algo__canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 32rem;
+}
+
+/* Groups whose transl(X|Y) changes between frames animate into place. */
+.algo-move {
+  transition: transform 500ms ease;
+}
+
+.step-controller {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.step-controller button {
+  font: inherit;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--cell-stroke);
+  border-radius: 0.3rem;
+  background: var(--tab-bg);
+  color: inherit;
+  cursor: pointer;
+}
+
+.step-controller button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.step-controller__count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+@media (max-width: 720px) {
+  .algo {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .algo__tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .algo__panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .algo-move {
+    transition: none;
+  }
+}
