@@ -114,7 +114,9 @@ export function About() {
         The 2020–2021 commits sit untouched at the base of{' '}
         <a href={`${REPO}/commits/main`}>the same repository</a>; the 2026
         rebuild is the series of commits layered on top. The before and the
-        after are both on the record, in one history.
+        after are both on the record, in one history. (The original commits are
+        authored under <code>seanwelz</code>, an earlier GitHub account of
+        mine.)
       </p>
 
       <h2>What changed</h2>
