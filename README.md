@@ -1,5 +1,8 @@
 # Visual Algorithms
 
+**[Live demo](https://visual-algorithms-sandy.vercel.app)** &nbsp;·&nbsp;
+[the original 2021 build](https://visual-algorithms-sandy.vercel.app/legacy/)
+
 Interactive, step-by-step animations that explain three classic algorithms:
 
 | Algorithm | Problem |
