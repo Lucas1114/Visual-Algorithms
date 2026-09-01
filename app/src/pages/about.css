@@ -1,0 +1,94 @@
+.about {
+  max-width: 52rem;
+  margin: 3.5rem auto;
+  padding: 0 1.25rem;
+  line-height: 1.6;
+}
+
+.about__back {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.about__back a,
+.about a {
+  color: inherit;
+}
+
+.about h1 {
+  margin: 0.25rem 0 1rem;
+}
+
+.about h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-size: 1.2rem;
+}
+
+.about h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+}
+
+.about__lead {
+  font-size: 1.05rem;
+}
+
+.about code {
+  font-size: 0.9em;
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.about__table-wrap {
+  overflow-x: auto;
+}
+
+.about__table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 40rem;
+  font-size: 0.9rem;
+}
+
+.about__table th,
+.about__table td {
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.about__table thead th {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.about__table tbody th {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.about__highlights {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.about__highlights > li > ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+}
+
+.about__highlights > li > ul li {
+  margin: 0.3rem 0;
+}
+
+.about__links {
+  padding-left: 1.1rem;
+}
+
+.about__links li {
+  margin: 0.35rem 0;
+}
