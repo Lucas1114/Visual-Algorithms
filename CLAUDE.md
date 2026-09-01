@@ -1,41 +1,61 @@
-# Visual-Algorithms — 重构工作说明
+# Visual-Algorithms — migration brief
 
-> **开发笔记 / session 交接记录在本地 `HANDOFF.md`（不提交）。每个新 session 先读本文件，再读 `HANDOFF.md`。**
-> 本文件按「可以给面试官看」的标准写 —— 不要往里加内部吐槽、个人信息、session 流水账、或关于仓库公开呈现的 meta 决定，那些进 `HANDOFF.md`。
+> **Working notes and session hand-off logs live in a local `HANDOFF.md` (not
+> committed). Every new session: read this file first, then `HANDOFF.md`.**
+> This file is written to a "an interviewer can read it" standard — keep out
+> internal asides, personal information, session-by-session logs, and meta
+> decisions about how the repo is presented publicly. Those go in `HANDOFF.md`.
 
-## 项目背景
+## Background
 
-这是 2021 年用纯 vanilla JavaScript + SVG 手写的算法可视化项目，包含三个算法的交互式动画讲解。原始代码没有任何框架，没有构建工具，依赖 jQuery + fullPage.js。
+A 2021 algorithm-visualisation project, hand-written in plain vanilla
+JavaScript + SVG: interactive, animated walkthroughs of three algorithms. The
+original code has no framework and no build tool; it depends on jQuery and
+fullPage.js.
 
-**这次重构的目标**：迁移到 React + TypeScript + Vite，部署到 Vercel，作为作品集展示。后期加一个薄的 Spring Boot 后端做配置分享。
+**Goal of this migration:** move to React + TypeScript + Vite, deploy to
+Vercel, present it as a portfolio piece. A thin Spring Boot backend for sharing
+configurations may follow later.
 
-**重要**：原始代码的 commit 历史（2020-2021）是这个项目价值的一部分 —— 它证明了这些动画是在 AI 辅助编程出现之前手写的。这段历史一个字节都不要动：不 rebase、不改写、不重建仓库。迁移工作在独立分支上正常提交，最后一次 squash-merge 并入 `main`（见「Git 工作流」）。
+**Important:** the original commit history (2020–2021) is part of what makes
+this project worth showing — it is the evidence that the animations were
+hand-written before AI coding tools existed. That history must not be touched:
+no rebase, no rewrite, no repo rebuild. The migration is committed normally on
+a separate branch and squash-merged into `main` at the end (see "Git
+workflow").
 
-## 三个算法
+## The three algorithms
 
-| 目录 | 算法 | 难度 | 优先级 |
+| Directory | Algorithm | Difficulty | Order |
 |---|---|---|---|
-| `KMP/` | Knuth-Morris-Pratt 字符串匹配 | 低 | 第一阶段 |
-| `Manachar/` | Manacher 最长回文子串 | 中 | 第二阶段 |
-| `Hare&Tortoise/` | Floyd 判圈（快慢指针） | 高 | 第三阶段 |
+| `KMP/` | Knuth–Morris–Pratt string matching | low | Phase 1 |
+| `Manachar/` | Manacher longest palindromic substring | medium | Phase 2 |
+| `hare-tortoise/` | Floyd cycle detection (tortoise and hare) | high | Phase 3 |
 
-**严格按顺序做，一次只做一个。** 第一阶段的产出包含一套共享组件，后两个是往这套骨架上填。不要三个并行开工。
+**Do them strictly in order, one at a time.** Phase 1 produces a set of shared
+components; the other two are filled in on top of that skeleton. Do not start
+all three in parallel.
 
-## 核心迁移原则
+## Core migration principles
 
-### 1. 算法逻辑原样保留
+### 1. Keep the algorithm logic as-is
 
-`kmp_pmt()`、`palindrome()` 这些纯计算函数是这个项目的核心资产，**逻辑一行都不要改**，只加 TypeScript 类型。如果你认为某处算法有问题，先停下来问，不要自己改。
+Pure computation functions like `kmp_pmt()` and `palindrome()` are the core
+asset of this project. **Do not change a line of their logic** — only add
+TypeScript types. If you think something in an algorithm is wrong, stop and
+ask; do not fix it yourself.
 
-### 2. 从「命令式画图」改成「状态驱动渲染」
+### 2. Move from "imperative drawing" to "state-driven rendering"
 
-原代码的模式是：清空容器 → 循环调用 `build_string()` 逐个 `createElementNS` 塞进 SVG。
+The original pattern: clear the container, then loop `build_string()`, pushing
+elements into the SVG one `createElementNS` at a time.
 
 ```js
 function reset(){ document.getElementById('rp_1').innerHTML='' }
 ```
 
-这其实已经是 immediate-mode rendering 了，跟 React 的心智模型一致。迁移方式是把每个视图函数变成一个组件：
+That is already immediate-mode rendering, which matches React's mental model.
+The migration turns each view function into a component:
 
 ```tsx
 function PmtView({ pat, nxt }: { pat: string; nxt: number[] }) {
@@ -43,136 +63,237 @@ function PmtView({ pat, nxt }: { pat: string; nxt: number[] }) {
 }
 ```
 
-`build_string` / `build` / `build_center` 这几个几乎一样的函数，统一成一个 `<Cell>` 组件。
+The near-identical `build_string` / `build` / `build_center` functions collapse
+into one `<Cell>` component.
 
-### 3. 动画：预计算帧 + CSS transition
+### 3. Animation: precomputed frames + CSS transitions
 
-原代码用多层嵌套 `setTimeout` 加逐帧 `setInterval` 改 `transform`。这套在 React 里不能照搬（组件重渲染时 timer 会失控），必须重写。
+The original uses deeply nested `setTimeout` plus per-frame `setInterval` to
+mutate `transform`. That cannot be carried over to React as-is (timers go out
+of control on re-render); it has to be rewritten.
 
-好消息是原作者已经把结构拆好了。KMP 的 `Animation()` 里：
+The good news is the original author already split out the structure. Inside
+KMP's `Animation()`:
 
 ```js
-var rec=[0]   // 每一步 text 指针位置
-var sgn=[0]   // 匹配 or 回退
-var back=[0]  // 回退到哪
+var rec=[0]   // text-pointer position at each step
+var sgn=[0]   // match or backtrack
+var back=[0]  // where it backtracks to
 ```
 
-这三个数组就是预计算好的帧序列。统一改成：
+Those three arrays are the precomputed frame sequence. Standardise on:
 
 ```ts
-type Frame = { /* 这一步的完整可见状态 */ };
+type Frame = { /* the full visible state at this step */ };
 const frames: Frame[] = useMemo(() => runAlgorithm(input), [input]);
 const [step, setStep] = useState(0);
 ```
 
-- 手动单步 = `setStep(s => s + 1)`
-- **后退 = `setStep(s => s - 1)`**（原代码里 H&T 那一大坨 `step_back()` 跨阶段回滚逻辑可以整个删掉）
-- 自动播放 = `useEffect` 里一个 interval，卸载时清理
+- Manual step forward = `setStep(s => s + 1)`
+- **Step backward = `setStep(s => s - 1)`** (the whole cross-phase `step_back()`
+  rollback in H&T can be deleted)
+- Autoplay = one interval in a `useEffect`, cleaned up on unmount
 
-位移动画全部交给 CSS：
+Positional animation is all handed to CSS:
 
 ```tsx
 <g style={{ transform: `translateX(${pos * SIDE}px)`, transition: 'transform .5s' }}>
 ```
 
-`tp_move` / `pp_move` / `pattern_move` / `preprocessing` 里那些逐帧 setInterval（每个约 30-40 行）全部删除。
+The per-frame `setInterval`s in `tp_move` / `pp_move` / `pattern_move` /
+`preprocessing` (~30–40 lines each) are all deleted.
 
-### 4. 布局计算抽成纯函数
+### 4. Extract layout maths into pure functions
 
-原代码里的坐标计算散在各处，且大量硬编码魔数（`x+170`、`y+100+2*side_len+20`、`fx+625` 等）。抽成 `layout.ts` 里的纯函数并定义常量。Manacher 的极坐标计算（`x-200*Math.cos(interval*(i-cycle))`）也一样，抽出来后可以单测。
+Coordinate maths in the original is scattered everywhere, with a lot of
+hard-coded magic numbers (`x+170`, `y+100+2*side_len+20`, `fx+625`, …). Extract
+it into pure functions in `layout.ts` and define named constants. The same goes
+for Manacher's polar-coordinate maths
+(`x-200*Math.cos(interval*(i-cycle))`) — once extracted it can be unit-tested.
 
-## 各阶段具体任务
+## Per-phase tasks
 
-### 第一阶段：脚手架 + KMP
+### Phase 1: scaffold + KMP
 
-**脚手架**
-- Vite + React 19 + TypeScript（原计划 React 18；2026-09 初始化时 Vite 官方模板已默认 React 19，迁移心智模型不变，故直接采用 19）
-- 不要引入 UI 框架、不要引入动画库（framer-motion 等），CSS transition 足够
-- 删除 jQuery、jQuery UI、fullPage.js。全屏滚动效果用 CSS `scroll-snap` 实现（fullPage.js 是 GPLv3/商业双授权，去掉更干净）
+**Scaffold**
+- Vite + React 19 + TypeScript (React 18 was the original plan; by the time it
+  was set up in Sept 2026 the official Vite template already defaulted to
+  React 19, and the migration mental model is unchanged, so 19 it is)
+- No UI framework, no animation library (framer-motion etc.) — CSS transitions
+  are enough
+- Remove jQuery, jQuery UI, fullPage.js. Full-screen scrolling is done with CSS
+  `scroll-snap` (fullPage.js is dual GPLv3/commercial — cleaner to drop it)
 - ESLint + Prettier + `strict: true`
 
-**共享组件**（后两个阶段复用）
-- `<Cell>` — 带边框的方格 + 居中文字，支持 fill/stroke/dash/transform
-- `<Arrow>` — 指针箭头 + 标签（原 `arrow()` 函数，注意它用 `points.getItem(i)` 逐点改坐标，改成直接算 points 字符串）
-- `<StepController>` — 前进/后退/播放/重置，管理 `step` state
-- `<AlgorithmLayout>` — 左侧 tab 菜单 + 右侧画布
+**Shared components** (reused by the other two phases)
+- `<Cell>` — a bordered box with centred text; supports fill/stroke/dash/transform
+- `<Arrow>` — pointer arrow + label (the original `arrow()`; note it mutated
+  coordinates via `points.getItem(i)` point by point — compute the points
+  string directly instead)
+- `<StepController>` — forward / back / play / reset, owns the `step` state
+- `<AlgorithmLayout>` — left-hand tab menu + right-hand canvas
 
-**KMP 页面**
-- 四个 tab：Introduction / Pre-Suffix / PMT / Animation（原 `build_button` 那 100+ 行手写 hover 和选中态，用 CSS 实现，只留十几行 JSX）
-- 四个视图对应四个组件，从 `generate()` / `pre_suf()` / `pmt()` / `Animation()` 翻译
-- 已知 bug 必须修复：`rec` / `sgn` / `back` 是全局数组且只 push 不清空，**重复点击 Animation 会导致动画错乱**。改成 useMemo 后自然消失。
+**KMP page**
+- Four tabs: Introduction / Pre-Suffix / PMT / Animation (the 100+ lines of
+  hand-rolled hover and selected state in `build_button` become CSS, leaving a
+  dozen lines of JSX)
+- Four views → four components, translated from `generate()` / `pre_suf()` /
+  `pmt()` / `Animation()`
+- Known bug that must be fixed: `rec` / `sgn` / `back` are global arrays that
+  are only pushed to, never reset — **clicking the Animation tab again
+  desyncs the animation**. It disappears once the frame builder is a pure
+  function behind `useMemo`.
 
-### 第二阶段：Manacher
+### Phase 2: Manacher
 
-- 主体动画迁移方式同 KMP
-- `step3()` 的翻转（flip）：每个格子的目标位置是纯函数 `targetX = (2*C - i) * SIDE`，直接交给 CSS transition，删掉那 200 帧的 setInterval
-- **流程图不要一比一迁移，重画。** 原 `draw_flowchart()` 有 27 个 block + 一堆 `direction()` 箭头，坐标全是 `fx+625, fy+770` 这类魔数，文本是拼接的 `<tspan>` 字符串，共约 600 行。改成数据驱动：
+- Main animation is migrated the same way as KMP
+- `step3()`'s flip: each cell's target position is a pure function
+  `targetX = (2*C - i) * SIDE` — hand it to a CSS transition and delete the
+  200-frame `setInterval`
+- **Do not migrate the flowchart one-to-one — redraw it.** The original
+  `draw_flowchart()` has 27 blocks plus a tangle of `direction()` arrows, all
+  coordinates like `fx+625, fy+770`, text built from concatenated `<tspan>`
+  strings — about 600 lines total. Make it data-driven:
 
 ```ts
 const FLOW_NODES = [{ id: 18, text: '...', pos: {...} }, ...];
 const FLOW_EDGES = [{ from: 5, to: 11, label: '' }, ...];
 ```
 
-  `fc_track` / `fc_process` / `di_process` 三个高亮函数 → 一个 `activeNodeId` state。
-- **已知死代码**：`stepforward()` 的 `case 7` 里 `step_cnt=14`，导致 `step8()` 到 `step13()` 永远不会被触发。那部分（约 200 行）是「为什么不需要比较翻转子串外的元素」的证明动画，内容上是 Manacher 最难讲清楚的地方。**先按现状迁移，把这部分接回去作为独立任务，做完主体后再动。**
+  The three highlight functions `fc_track` / `fc_process` / `di_process` → one
+  `activeNodeId` state.
+- **Known dead code:** `step_cnt=14` in `case 7` of `stepforward()` means
+  `step8()` through `step13()` are never reached. That block (~200 lines) is
+  the proof animation for "why you don't need to compare the elements outside
+  the reversed substring" — the hardest part of Manacher to explain. **Migrate
+  the rest as-is first; reconnecting this is a separate task once the main body
+  is done.**
 
-### 第三阶段：Hare & Tortoise
+### Phase 3: Hare & Tortoise
 
-- 拖拽条（`eventHandler`）：改成 `<input type="range">` 或 React 受控拖拽。**注意原代码 bug**：`case "mousedown"` 里赋值 `tmpX` / `mouseX`，但顶部声明的是 `tmpY` / `mouseY`，前两个是隐式全局变量，strict 模式会报错
-- 链表 + 环的极坐标布局抽成纯函数
-- 双向单步：原 `step_back()` 里跨阶段回滚（从「兔降速为 1」退回「相遇时刻」，还要恢复 `merge_cx` / `merge_cy` 坐标）整个删掉，由 `frames[step-1]` 天然支持
-- `track_draw()` 的五个 case 推导图：数据驱动重画，同 Manacher 流程图的做法
+- The drag slider (`eventHandler`): replace with `<input type="range">` or a
+  controlled React drag. **Note the bug in the original:** `case "mousedown"`
+  assigns `tmpX` / `mouseX`, but the declarations at the top say `tmpY` /
+  `mouseY` — the first two are implicit globals and are a hard error under
+  strict mode
+- The linked-list + ring polar-coordinate layout is extracted into pure
+  functions
+- Two-way stepping: the cross-phase rollback in the original `step_back()`
+  (stepping from "hare slows to 1" back to "the meeting", restoring
+  `merge_cx` / `merge_cy`) is deleted wholesale — `frames[step-1]` handles it
+- `track_draw()`'s five-case derivation diagram: redrawn data-driven, same
+  approach as the Manacher flowchart
 
-### 第四阶段：Spring Boot 后端（可选，待定）
+### Phase 4: Spring Boot backend (optional, undecided)
 
-一个 endpoint + 一张表，保存「算法 + 输入字符串 + 选中的中心点」，返回短链。前端做 URL 状态序列化。做之前先跟我确认设计。
+One endpoint + one table, storing "algorithm + input string + chosen centre"
+and returning a short link. The frontend serialises state into the URL. Confirm
+the design before starting.
 
-## Git 工作流
+## Git workflow
 
-这个仓库的 commit 历史本身是作品集的一部分（会有人点进来看重构过程），所以提交要专业、粒度合理：
+This repo's commit history is itself part of the portfolio (people will click
+in and read through the refactor), so commits should be professional and
+sensibly scoped:
 
-- **多次提交，一次推送。** 按重构的自然结构切分 commit（一个逻辑改动一个 commit：改名、脚手架、某个共享组件、某个视图……），攒够一批（大概 5-6 个）或一个小阶段告一段落，再一次性 `git push`。不要一个巨型 commit，也不要每改一行就 push。
-- commit message 写清楚「改了什么、为什么」，用英文，遵循仓库既有风格。
-- 每个大阶段（KMP / Manacher / H&T）完成时必定推一次。
-- **`main` 上 2020-2021 的原始 commit 一个字节不动** —— 不 rebase、不改写、不 force-push 已发布的历史。迁移工作在 `react-migration` 分支进行，全部完成后**一次 squash-merge 并入 `main`**，压成一组精心组织的 commit（改名 / 脚手架 / 共享组件 / KMP / Manacher / H&T / 部署 / About），随后删除迁移分支。这一步是既定方案，与上面「保留原始历史」不冲突。
-- push 前先 `npm run lint` + `npx tsc -b` + `npm test` + `npm run build` 全绿。
+- **Commit often, push once.** Split commits along the natural structure of the
+  refactor (one logical change per commit: a rename, the scaffold, a shared
+  component, a view, …); batch up a handful (roughly 5–6) or a small phase, then
+  `git push` once. No single giant commit, and no push per line changed.
+- Commit messages say what changed and why, in English, matching the repo's
+  existing style.
+- Push at least once whenever a major phase (KMP / Manacher / H&T) is done.
+- **The 2020–2021 commits on `main` do not change by one byte** — no rebase, no
+  rewrite, no force-push of published history. The migration is done on the
+  `react-migration` branch and, once everything is complete, **squash-merged
+  into `main` in one step**, as a set of carefully organised commits (rename /
+  scaffold / shared components / KMP / Manacher / H&T / deploy / About); the
+  migration branch is then deleted. This step is by design and does not
+  conflict with "keep the original history."
+- Before pushing: `npm run lint` + `npx tsc -b` + `npm test` + `npm run build`
+  all green.
 
-## 部署
+## Deployment
 
-**时序（用户 2026-09-01 定）**：先做完 Manacher，再做完 Hare & Tortoise，**三个算法都迁移完之后**，才一起做部署 + About 页。不要提前搭部署（before/after 对比表要三个都在才完整）。
+**Sequencing (decided by the owner, 2026-09-01):** finish Manacher, then finish
+Hare & Tortoise, and only **after all three algorithms are migrated** do the
+deployment + About page together. Do not set up deployment early (the
+before/after table is only complete with all three present).
 
-- Vercel 连 GitHub 仓库，push 自动部署。Root Directory 设 `app/`，framework 选 Vite。`app/vercel.json`（SPA rewrite）已就位。
-- 保留原有的三个算法子路径（`/kmp`、`/manacher`、`/floyd`），旧链接尽量不要死
-- **新旧站同时部署，一个 URL**（用户要这个，用来证明旧版是 AI 时代之前手写的）：
-  - 方案：一个 Vercel 部署，`vite build` 后用一个小构建脚本把仓库根的 2021 文件（`index.html` / `KMP/` / `Manachar/` / `hare-tortoise/` / `dist/` / `imgs/` / `examples.js`）复制进 `dist/legacy/`。旧文件继续留在仓库根不动，只构建时拷贝。
-  - 结果：`域名/` = React 新版，`域名/legacy/` = 原样 2021 版
-  - 互链：新版首页一句 "See the original 2021 version →"；旧版 `index.html` 顶部加 banner 链回 `/`
-- **About 页**（React `/about` 路由，三个算法都完成后做）：引言（2021 手写 / 2026 AI 重构）+ before/after 对比表 + 链到 `/legacy/` + 链到 GitHub 仓库。provenance 证据：同仓库里 2020-2021 的原始 commit 原封不动，2026 重构是叠在其上的一组 commit。
+- Vercel connected to the GitHub repo, auto-deploy on push. Root Directory set
+  to `app/`, framework Vite. `app/vercel.json` (SPA rewrite) is in place.
+- Keep the three algorithm sub-paths (`/kmp`, `/manacher`, `/floyd`); try not
+  to let old links die.
+- **The old and new sites deployed together, one URL** (the owner wants this,
+  as proof the old version predates the AI era):
+  - Approach: one Vercel deployment; after `vite build`, a small build script
+    copies the repo-root 2021 files (`index.html` / `KMP/` / `Manachar/` /
+    `hare-tortoise/` / `dist/` / `imgs/` / `examples.js`) into `dist/legacy/`.
+    The old files stay at the repo root, untouched — only copied at build time.
+  - Result: `domain/` = the React version, `domain/legacy/` = the 2021 version
+    as-is
+  - Cross-links: a "See the original 2021 version →" line on the new home page;
+    a banner at the top of the old `index.html` linking back to `/`
+- **About page** (React `/about` route, built once all three algorithms are
+  done): an intro (2021 hand-written / 2026 AI-assisted rebuild) + the
+  before/after table + a link to `/legacy/` + a link to the GitHub repo.
+  Provenance evidence: the 2020–2021 commits in the same repo are untouched,
+  and the 2026 rebuild is a set of commits layered on top.
 
-## 其他
+## Miscellaneous
 
-- ~~原 `index.html` About 页有明文邮箱会被爬虫扫~~ 已删除（2026-09-01，那是用户不再使用的学校 alumni 邮箱，直接去掉整行；以后联系方式走 LinkedIn，等 React About 页做的时候加链接，需要用户给 URL）
-- README 里写清楚：2021 年原始实现为纯手写 vanilla JS + SVG，2026 年迁移至 React + TypeScript。原始 commit 历史保留在同一仓库
-- 每个阶段做完先跑起来给我看效果，不要一口气做完三个
-- 项目 / 部署完成后的收尾清单（面试笔记、Git 历史清理等）见 `HANDOFF.md`
+- ~~The original `index.html` About section had a plaintext email that
+  crawlers would scrape~~ removed (2026-09-01 — a school alumni address the
+  owner no longer uses; the whole line was dropped. Contact goes through
+  LinkedIn from now on; the link was added when the React About page was built,
+  using a URL the owner provided).
+- The README states plainly: the 2021 original was hand-written vanilla
+  JS + SVG; in 2026 it was migrated to React + TypeScript. The original commit
+  history is preserved in the same repo.
+- Run each phase and show the result before moving on; do not do all three in
+  one go.
+- The wrap-up checklist after the project / deployment is done (interview
+  notes, git-history clean-up, etc.) is in `HANDOFF.md`.
 
-## 沟通方式
+## Working style
 
-- **每次开新对话，第一件事用 `set_session_title` 给会话命名**，格式 `阶段N：简述`（如 `阶段一：KMP 动画 tab`、`阶段二：Manacher 流程图`、`杂项：修 Vercel 部署`），方便日后按阶段检索同一项目的多个对话。对话范围明显变化时再改一次名。
-- 遇到「原代码逻辑看不懂」或「疑似 bug」，停下来问，不要自行推断后改掉
-- 技术解释先给一个简单具体的例子，再讲抽象原理
-- 需要我理解某段陌生代码的流程时，用 function 粒度的流程图（一个函数一个节点）
-- 目录 `Hare&Tortoise/` 改名为 `hare-tortoise/`。`&` 在 shell 和 URL 中是特殊字符，原 index.html 里的 `href="Hare&Tortoise/..."` 本身也不规范。用 `git mv` 改名以保留文件历史
-  - 已完成（2026-09-01）：`git mv Hare&Tortoise/ hare-tortoise/`，三个文件（`.css`/`.html`/`.js`）一并改名，文件名内部的 `Hare&Tortoise.*` 暂保持不变（React 迁移阶段会整体替换）。`index.html` 的 `href="Hare&Tortoise/..."` 已更新为 `href="hare-tortoise/..."`；`KMP/KMP.html`、`Manachar/Manachar.html`、`hare-tortoise/Hare&Tortoise.html` 里指向 `../Hare&Tortoise/...` 的侧边栏交叉链接也一并更新。原因：`&` 在 shell 里是后台执行符、在 URL 里是 query 分隔符，裸写会导致链接和命令行操作出错。
+- **The first thing in every new conversation: name the session with
+  `set_session_title`**, format `Phase N: short description` (e.g. `Phase 1:
+  KMP animation tab`, `Phase 2: Manacher flowchart`, `Misc: fix Vercel
+  deploy`), so the several conversations for this project can be found by
+  phase later. Rename once more if the conversation's scope clearly shifts.
+- On "I can't follow the original logic" or "this looks like a bug", stop and
+  ask — do not infer and then change it.
+- Technical explanations: give a small concrete example first, then the
+  abstract principle.
+- When the owner needs to understand the flow of an unfamiliar piece of code,
+  use a function-level flowchart (one node per function).
+- The directory `Hare&Tortoise/` is renamed to `hare-tortoise/`. `&` is a
+  special character in the shell and in URLs, and the original
+  `href="Hare&Tortoise/..."` in index.html was never well-formed. Use `git mv`
+  so file history is preserved.
+  - Done (2026-09-01): `git mv Hare&Tortoise/ hare-tortoise/`, all three files
+    (`.css` / `.html` / `.js`) renamed together; the `Hare&Tortoise.*` inside
+    the filenames is left for now (replaced wholesale during the React
+    migration). `index.html`'s `href="Hare&Tortoise/..."` updated to
+    `href="hare-tortoise/..."`; the sidebar cross-links pointing at
+    `../Hare&Tortoise/...` in `KMP/KMP.html`, `Manachar/Manachar.html` and
+    `hare-tortoise/Hare&Tortoise.html` updated too. Reason: `&` is a
+    background operator in the shell and a query separator in URLs — leaving it
+    bare breaks both links and command-line work.
 
-## 进度
+## Progress
 
-- [x] 第一阶段：脚手架 + KMP（2026-09-01，四个 tab 全部可用）
-- [x] 第二阶段：Manacher（2026-09-01，主体动画 + 数据驱动流程图 +
-  「为什么不用比翻转子串外的元素」证明动画全部完成）
-- [x] 第三阶段：Hare & Tortoise（2026-09-01，两阶段 Floyd 走查 + 沿环弧动画 +
-  距离等式推导图；ρ 建模成后继函数跑教科书 Floyd，输入字母串 + 点选环入口）
-- [x] 部署 + About 页（2026-09-02，同一 Vercel 部署：`/` React 新版、`/legacy/`
-  原样 2021 版，构建脚本按需拷旧文件；`/about` 路由讲 before/after + provenance；
-  首页卡片走查缩略图由 `npm run thumbnails` 脚本生成）
-- [ ] 第四阶段：Spring Boot 后端（待定）
+- [x] Phase 1: scaffold + KMP (2026-09-01, all four tabs working)
+- [x] Phase 2: Manacher (2026-09-01 — main animation + data-driven flowchart +
+  the "why no outside comparison is needed" proof animation, all done)
+- [x] Phase 3: Hare & Tortoise (2026-09-01 — two-phase Floyd walkthrough +
+  along-the-ring animation + distance-identity derivation; ρ modelled as a
+  successor function running textbook Floyd, input a letter string + click the
+  cycle entrance)
+- [x] Deployment + About page (2026-09-02 — one Vercel deployment: `/` the
+  React version, `/legacy/` the 2021 version as-is, build script copies the old
+  files on demand; the `/about` route covers before/after + provenance; the
+  home-card walkthrough thumbnails are produced by the `npm run thumbnails`
+  script)
+- [ ] Phase 4: Spring Boot backend (undecided)
