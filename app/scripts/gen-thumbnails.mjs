@@ -124,7 +124,7 @@ for (const target of TARGETS) {
     await page.goto(`${base}${target.path}`, { waitUntil: 'domcontentloaded' });
     await sleep(400);
     await target.prepare(page);
-    await sleep(500); // let CSS transitions settle
+    await sleep(1000); // let CSS transitions / the step-intro flash settle
     const png = join(outDir, `${target.name}-${scheme}.png`);
     await page.screenshot({ path: png, clip: CLIP });
     await page.close();
