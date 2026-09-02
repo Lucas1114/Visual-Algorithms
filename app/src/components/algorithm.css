@@ -114,6 +114,10 @@
 }
 
 .algo__canvas {
+  /* Cap the drawing's height so a tall diagram doesn't shove the caption and
+     step buttons below the fold. Pages that need a different ceiling override
+     --canvas-max-h. */
+  --canvas-max-h: min(58vh, 27rem);
   overflow-x: auto;
   background: var(--panel-bg);
   border-radius: 0.5rem;
@@ -125,6 +129,11 @@
   width: 100%;
   height: auto;
   min-width: 32rem;
+  max-height: var(--canvas-max-h);
+  /* match the width to the height cap (--canvas-ar = viewBox w/h) so a
+     height-limited drawing stays centred instead of letterboxed. */
+  max-width: calc(var(--canvas-ar, 3) * var(--canvas-max-h));
+  margin-inline: auto;
 }
 
 /* Groups whose transl(X|Y) changes between frames animate into place. */

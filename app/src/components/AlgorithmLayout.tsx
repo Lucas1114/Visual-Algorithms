@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import './algorithm.css';
 
 export interface TabDef {
@@ -72,7 +72,11 @@ export function TabPanel({
 
 /**
  * Responsive SVG canvas. Content is authored in a fixed coordinate space
- * (`width` × `height`); the element scales to fit and scrolls if it can't.
+ * (`width` × `height`); the element scales to fit the column width, but its
+ * height is capped (`--canvas-max-h` in `algorithm.css`) so a near-square
+ * diagram can't grow taller than the viewport and push the step controls out
+ * of view. `--canvas-ar` lets the CSS cap the width to match, keeping the
+ * drawing centred without letterboxing.
  */
 export function Canvas({
   width,
@@ -84,10 +88,13 @@ export function Canvas({
   children: ReactNode;
 }) {
   return (
-    <div className="algo__canvas">
+    <div
+      className="algo__canvas"
+      style={{ '--canvas-ar': width / height } as CSSProperties}
+    >
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="xMinYMin meet"
+        preserveAspectRatio="xMidYMin meet"
         role="img"
       >
         {children}
