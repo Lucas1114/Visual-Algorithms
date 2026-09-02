@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Canvas } from '../../components/AlgorithmLayout';
 import { StepController } from '../../components/StepController';
 import { useStepPlayer } from '../../components/useStepPlayer';
@@ -73,10 +79,16 @@ function LeaderLabel({
   bend?: 'elbow' | 'straight';
 }) {
   const FS = 11;
-  const w = Math.max(text.length * FS * 0.68, 24);
+  const textRef = useRef<SVGTextElement>(null);
+  const [measured, setMeasured] = useState(0);
+  useLayoutEffect(() => {
+    if (textRef.current) setMeasured(textRef.current.getComputedTextLength());
+  }, [text]);
+  // underline matches the rendered word width exactly, with a hair of overhang
+  const w = (measured || text.length * FS * 0.68) + 4;
   const ulY = ty + 3;
-  const ulLeft = anchor === 'end' ? tx - w - 2 : tx - 2;
-  const ulRight = anchor === 'end' ? tx + 2 : tx + w + 2;
+  const ulLeft = anchor === 'end' ? tx - w : tx - 2;
+  const ulRight = anchor === 'end' ? tx + 2 : tx + w;
 
   const nodeIsRight = node.x >= (ulLeft + ulRight) / 2;
   const start: Pt = { x: nodeIsRight ? ulRight : ulLeft, y: ulY };
@@ -99,6 +111,7 @@ function LeaderLabel({
   return (
     <g stroke={color} fill={color} strokeLinecap="round" strokeLinejoin="round">
       <text
+        ref={textRef}
         x={tx}
         y={ty}
         fontSize={FS}
