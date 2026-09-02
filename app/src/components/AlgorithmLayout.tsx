@@ -96,6 +96,9 @@ export function Canvas({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMin meet"
         role="img"
+        /* default fill for bare <text> (row labels, index numbers) so they
+           follow the light / dark theme instead of staying black */
+        fill="var(--cell-text)"
       >
         {children}
       </svg>
