@@ -25,9 +25,14 @@ const center = (i: number) => LABEL_W + cellCenterX(i);
 export function ManacherView({
   input,
   centerIndex,
+  attention = false,
+  onFirstAction,
 }: {
   input: string;
   centerIndex: number;
+  /** Pulse the step buttons to show they're the next thing to touch. */
+  attention?: boolean;
+  onFirstAction?: () => void;
 }) {
   const { s, p } = useMemo(() => manacher(input), [input]);
   const run = useMemo(
@@ -71,14 +76,16 @@ export function ManacherView({
 
   return (
     <div className="manacher-view">
-      <div className="manacher-flow-wrap">
-        <Flowchart
-          activeNodes={frame.flowNodes}
-          activeEdges={frame.flowEdges}
-        />
-      </div>
-
       <div className="manacher-stage">
+        {/* Controls sit above the canvas so the "step through…" instruction
+            leads straight into them, and the derivation panel below never
+            shifts the button row. */}
+        <StepController
+          player={player}
+          attention={attention}
+          onAction={onFirstAction}
+        />
+
         <Canvas width={width} height={height}>
           {/* row labels */}
           <text
@@ -316,10 +323,6 @@ export function ManacherView({
 
         <p className="manacher-caption">{frame.caption}</p>
 
-        {/* Controls stay put — the derivation panel grows *below* them so the
-            button row never shifts as more proof lines appear. */}
-        <StepController player={player} />
-
         {inProof && (
           <div className="manacher-derivation">
             <span className="manacher-derivation__label">
@@ -341,6 +344,10 @@ export function ManacherView({
             </ol>
           </div>
         )}
+      </div>
+
+      <div className="manacher-flow-wrap">
+        <Flowchart activeNodes={frame.flowNodes} activeEdges={frame.flowEdges} />
       </div>
     </div>
   );

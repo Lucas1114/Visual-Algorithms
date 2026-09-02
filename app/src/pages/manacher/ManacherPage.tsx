@@ -9,6 +9,10 @@ import './manacher.css';
 
 const MAX_LEN = 11;
 const LABEL_W = 96;
+/** Default palindrome centre for the string that loads first — a diff-border
+ * case, so the walkthrough opens on the proof animation (the page's highlight). */
+const DEFAULT_CENTER = 9;
+
 const sanitize = (raw: string) =>
   raw
     .replace(/[^a-zA-Z]/g, '')
@@ -17,65 +21,68 @@ const sanitize = (raw: string) =>
 
 export function ManacherPage() {
   const [draft, setDraft] = useState(DEFAULT_INPUT);
-  const [input, setInput] = useState<string | null>(null);
-  const [centerIndex, setCenterIndex] = useState<number | null>(null);
+  const [input, setInput] = useState(DEFAULT_INPUT);
+  const [centerIndex, setCenterIndex] = useState(DEFAULT_CENTER);
+  // The step buttons pulse until the visitor first uses them (once per session).
+  const [touched, setTouched] = useState(false);
+
+  const build = () => {
+    if (!draft) return;
+    setInput(draft);
+    // old centre may not exist in the new transformed string — land on its middle
+    setCenterIndex(draft.length);
+  };
 
   return (
-    <AlgorithmLayout
-      title="Manacher"
-      tabs={[]}
-      activeTab=""
-      onTabChange={() => {}}
-    >
+    <AlgorithmLayout title="Manacher">
       <div className="manacher-page">
-        <ol className="manacher-steps">
-          <li>
-            <span>Input a string (letters only, up to {MAX_LEN}):</span>
+        <div className="manacher-setup">
+          <div className="manacher-setup__form">
+            <p className="manacher-step">
+              Type a string (letters only, up to {MAX_LEN}) and click Start — or
+              just keep the default.
+            </p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (draft) {
-                  setInput(draft);
-                  setCenterIndex(null);
-                }
+                build();
               }}
             >
               <input
                 aria-label="string"
                 value={draft}
                 onChange={(e) => setDraft(sanitize(e.target.value))}
-                placeholder="ABACABACABB"
+                placeholder={DEFAULT_INPUT}
               />
               <button type="submit" disabled={!draft}>
                 Start
               </button>
             </form>
-          </li>
-          <li className={input ? undefined : 'is-disabled'}>
-            <span>
-              Click an index of the transformed string to choose the palindrome
-              center:
-            </span>
-            {input && (
-              <CenterPicker
-                input={input}
-                selected={centerIndex}
-                onSelect={setCenterIndex}
-              />
-            )}
-          </li>
-          <li className={centerIndex != null ? undefined : 'is-disabled'}>
-            <span>Step through how the radius at that center is found.</span>
-          </li>
-        </ol>
+            <p className="manacher-step">
+              Then step through how the radius at that centre is found.
+            </p>
+          </div>
 
-        {input && centerIndex != null && (
-          <ManacherView
-            key={`${input}:${centerIndex}`}
-            input={input}
-            centerIndex={centerIndex}
-          />
-        )}
+          <div className="manacher-setup__picker">
+            <p className="manacher-step">
+              <mark className="manacher-cta">Click an index</mark> of the
+              transformed string to choose the palindrome centre.
+            </p>
+            <CenterPicker
+              input={input}
+              selected={centerIndex}
+              onSelect={setCenterIndex}
+            />
+          </div>
+        </div>
+
+        <ManacherView
+          key={`${input}:${centerIndex}`}
+          input={input}
+          centerIndex={centerIndex}
+          attention={!touched}
+          onFirstAction={() => setTouched(true)}
+        />
       </div>
     </AlgorithmLayout>
   );
