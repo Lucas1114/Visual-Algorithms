@@ -219,14 +219,17 @@ export function ManacherView({
               x1={col(border0) + SIDE}
               y1={S_Y}
               x2={col(border0) + SIDE}
-              y2={PAL34_Y + SIDE}
+              y2={PAL34_Y + SIDE + 8}
               stroke="var(--match)"
               strokeWidth={2}
               strokeDasharray="5,4"
             />
+            {/* label sits at the *bottom* of the line — the top is crowded by
+                the "Cur" arrow, which the two can overlap when cur is near the
+                border. */}
             <text
               x={col(border0) + SIDE}
-              y={IDX_Y - 18}
+              y={PAL34_Y + SIDE + 20}
               fontSize={11}
               textAnchor="middle"
               fill="var(--match)"
