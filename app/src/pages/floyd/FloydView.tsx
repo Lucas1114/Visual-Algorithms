@@ -44,9 +44,14 @@ function ArrowHead({ tip, from }: { tip: Pt; from: Pt }) {
 }
 
 /**
- * A bold caption with an underline that runs on into a 45° leader and a small
- * arrow at the target node — so the word never lies across the ring arc and it
- * reads as clearly "this node".
+ * A bold ALL-CAPS caption with an underline that runs on to a small arrow at
+ * the target node — so the word never lies across the ring arc and reads
+ * clearly as "this node".
+ *
+ * `bend: 'elbow'` keeps the underline horizontal and turns 45° to the node
+ * (used where there's room to run flat — the entrance). `bend: 'straight'`
+ * drops from the underline straight to the node, so the leader still points
+ * at the node even when a pointer sits on top of its far end (the meeting).
  */
 function LeaderLabel({
   text,
@@ -56,6 +61,7 @@ function LeaderLabel({
   node,
   nodeR,
   color,
+  bend = 'elbow',
 }: {
   text: string;
   tx: number;
@@ -64,9 +70,10 @@ function LeaderLabel({
   node: Pt;
   nodeR: number;
   color: string;
+  bend?: 'elbow' | 'straight';
 }) {
   const FS = 11;
-  const w = Math.max(text.length * FS * 0.56, 24);
+  const w = Math.max(text.length * FS * 0.68, 24);
   const ulY = ty + 3;
   const ulLeft = anchor === 'end' ? tx - w - 2 : tx - 2;
   const ulRight = anchor === 'end' ? tx + 2 : tx + w + 2;
@@ -83,33 +90,31 @@ function LeaderLabel({
     x: node.x + (vx / vlen) * (nodeR + 5),
     y: node.y + (vy / vlen) * (nodeR + 5),
   };
-  // 45° bend: horizontal along the underline, then a diagonal to the tip
   const diag = Math.abs(start.y - tip.y);
-  const bend: Pt = { x: tip.x - Math.sign(tip.x - start.x) * diag, y: start.y };
+  const mid: Pt =
+    bend === 'straight'
+      ? start
+      : { x: tip.x - Math.sign(tip.x - start.x || 1) * diag, y: start.y };
 
   return (
-    <g
-      stroke={color}
-      fill={color}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <g stroke={color} fill={color} strokeLinecap="round" strokeLinejoin="round">
       <text
         x={tx}
         y={ty}
         fontSize={FS}
         fontWeight={700}
+        letterSpacing={0.6}
         textAnchor={anchor}
         stroke="none"
       >
         {text}
       </text>
       <polyline
-        points={`${far},${ulY} ${bend.x},${bend.y} ${tip.x},${tip.y}`}
+        points={`${far},${ulY} ${mid.x},${mid.y} ${tip.x},${tip.y}`}
         fill="none"
         strokeWidth={1.2}
       />
-      <ArrowHead tip={tip} from={bend} />
+      <ArrowHead tip={tip} from={mid} />
     </g>
   );
 }
@@ -130,9 +135,9 @@ function nodeRadius(mu: number, lambda: number) {
  * lane, clamped to stay inside the canvas with room for the underline. */
 function labelOut(i: number, mu: number, lambda: number) {
   const a = cycleAngle(i, mu, lambda);
-  const r = RING_R + 58;
-  const x = Math.min(Math.max(RING_CX - r * Math.cos(a), 60), VIEW_W - 60);
-  const y = Math.min(Math.max(RING_CY - r * Math.sin(a), 22), VIEW_H - 14);
+  const r = RING_R + 82;
+  const x = Math.min(Math.max(RING_CX - r * Math.cos(a), 50), VIEW_W - 48);
+  const y = Math.min(Math.max(RING_CY - r * Math.sin(a), 16), VIEW_H - 10);
   return { x, y };
 }
 
@@ -335,29 +340,46 @@ export function FloydView({
 
         {/* entrance flag — down-left of the ring's left point, clear of the arc */}
         <LeaderLabel
-          text="entrance"
+          text="ENTRANCE"
           tx={RING_CX - RING_R - 44}
-          ty={RING_CY + 44}
+          ty={RING_CY + 46}
           anchor="end"
           node={{ x: RING_CX - RING_R, y: RING_CY }}
           nodeR={NODE_R}
           color="var(--match)"
+          bend="elbow"
         />
         {frame.met &&
-          meetingNode !== entranceNode &&
           (() => {
             const mn = nodePos(meetingNode, mu, lambda);
+            if (meetingNode === entranceNode) {
+              // x = 0: the pointers meet right at the entrance — stack MEETING
+              // above so both labels point at the one node.
+              return (
+                <LeaderLabel
+                  text="MEETING"
+                  tx={RING_CX - RING_R - 40}
+                  ty={RING_CY - 40}
+                  anchor="end"
+                  node={mn}
+                  nodeR={NODE_R}
+                  color="var(--tab-active)"
+                  bend="elbow"
+                />
+              );
+            }
             const lo = labelOut(meetingNode, mu, lambda);
             const anchor = lo.x < mn.x ? 'end' : 'start';
             return (
               <LeaderLabel
-                text="meeting"
+                text="MEETING"
                 tx={lo.x}
                 ty={lo.y}
                 anchor={anchor}
                 node={mn}
                 nodeR={NODE_R}
                 color="var(--tab-active)"
+                bend="straight"
               />
             );
           })()}
@@ -388,7 +410,7 @@ export function FloydView({
           <span>
             <span className="floyd-dot floyd-dot--tort" />{' '}
             <strong>Tortoise</strong> {frame.tortSteps} step
-            {frame.tortSteps === 1 ? '' : 's'}
+            {frame.tortSteps === 1 ? '' : 's'} (×1)
           </span>
           <span>
             <span className="floyd-dot floyd-dot--hare" /> <strong>Hare</strong>{' '}

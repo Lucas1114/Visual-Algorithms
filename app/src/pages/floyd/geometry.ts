@@ -10,16 +10,16 @@
  */
 
 export const RING_R = 190;
-export const RING_CX = 630;
-export const RING_CY = 220;
-export const TAIL_SPAN = 400;
+export const RING_CX = 650;
+export const RING_CY = 240;
+export const TAIL_SPAN = 420;
 export const TAIL_X0 = RING_CX - RING_R - TAIL_SPAN;
 
-// Wide and low, with tight margins — the ρ figure spans x 40..820, y 30..410,
-// so a long string's tail nodes and the ring both get more room instead of
-// sitting in a band down the middle.
-export const VIEW_W = 860;
-export const VIEW_H = 440;
+// Wide and low so a long string's tail nodes and the ring both get room, with
+// ~50px of margin around the ρ figure (x 40..840, y 50..430) for the leader
+// labels.
+export const VIEW_W = 900;
+export const VIEW_H = 480;
 
 /** How far the hare / tortoise markers sit off the node ring. */
 export const LANE_OFFSET = 26;
