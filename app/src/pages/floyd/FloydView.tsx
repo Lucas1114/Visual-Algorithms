@@ -18,40 +18,98 @@ import {
 import { PointerMarker, type Move } from './PointerMarker';
 import { TrackDerivation } from './TrackDerivation';
 
-/** "entrance" label, parked down and left of the ring's left point (clear of
- * the arc that runs through a label placed straight below it) with a short
- * arrow leading back to the node. */
-function EntranceFlag({ r }: { r: number }) {
-  const nodeX = RING_CX - RING_R;
-  const nodeY = RING_CY;
-  const tip = { x: nodeX - 4, y: nodeY + r + 3 };
-  const tail = { x: nodeX - 42, y: nodeY + 44 };
-  const dx = tip.x - tail.x;
-  const dy = tip.y - tail.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  const head = 6;
+interface Pt {
+  x: number;
+  y: number;
+}
+
+/** Small filled triangle at `tip`, pointing along `from → tip`. */
+function ArrowHead({ tip, from }: { tip: Pt; from: Pt }) {
+  const dx = tip.x - from.x;
+  const dy = tip.y - from.y;
+  const l = Math.hypot(dx, dy) || 1;
+  const ux = dx / l;
+  const uy = dy / l;
+  const s = 6;
+  const bx = tip.x - s * ux;
+  const by = tip.y - s * uy;
   return (
-    <g stroke="var(--match)" fill="var(--match)">
-      <line x1={tail.x} y1={tail.y} x2={tip.x} y2={tip.y} strokeWidth={1} />
-      <path
-        d={`M ${tip.x} ${tip.y} L ${tip.x - head * ux + head * 0.6 * -uy} ${
-          tip.y - head * uy + head * 0.6 * ux
-        } L ${tip.x - head * ux - head * 0.6 * -uy} ${
-          tip.y - head * uy - head * 0.6 * ux
-        } Z`}
-        stroke="none"
-      />
+    <path
+      d={`M ${tip.x} ${tip.y} L ${bx - s * 0.5 * uy} ${by + s * 0.5 * ux} L ${
+        bx + s * 0.5 * uy
+      } ${by - s * 0.5 * ux} Z`}
+      stroke="none"
+    />
+  );
+}
+
+/**
+ * A bold caption with an underline that runs on into a 45° leader and a small
+ * arrow at the target node — so the word never lies across the ring arc and it
+ * reads as clearly "this node".
+ */
+function LeaderLabel({
+  text,
+  tx,
+  ty,
+  anchor,
+  node,
+  nodeR,
+  color,
+}: {
+  text: string;
+  tx: number;
+  ty: number;
+  anchor: 'start' | 'end';
+  node: Pt;
+  nodeR: number;
+  color: string;
+}) {
+  const FS = 11;
+  const w = Math.max(text.length * FS * 0.56, 24);
+  const ulY = ty + 3;
+  const ulLeft = anchor === 'end' ? tx - w - 2 : tx - 2;
+  const ulRight = anchor === 'end' ? tx + 2 : tx + w + 2;
+
+  const nodeIsRight = node.x >= (ulLeft + ulRight) / 2;
+  const start: Pt = { x: nodeIsRight ? ulRight : ulLeft, y: ulY };
+  const far = nodeIsRight ? ulLeft : ulRight;
+
+  // arrow tip: a small gap off the node edge, on the node → underline line
+  const vx = start.x - node.x;
+  const vy = start.y - node.y;
+  const vlen = Math.hypot(vx, vy) || 1;
+  const tip: Pt = {
+    x: node.x + (vx / vlen) * (nodeR + 5),
+    y: node.y + (vy / vlen) * (nodeR + 5),
+  };
+  // 45° bend: horizontal along the underline, then a diagonal to the tip
+  const diag = Math.abs(start.y - tip.y);
+  const bend: Pt = { x: tip.x - Math.sign(tip.x - start.x) * diag, y: start.y };
+
+  return (
+    <g
+      stroke={color}
+      fill={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <text
-        x={tail.x + 2}
-        y={tail.y + 4}
-        fontSize={11}
-        textAnchor="end"
+        x={tx}
+        y={ty}
+        fontSize={FS}
+        fontWeight={700}
+        textAnchor={anchor}
         stroke="none"
       >
-        entrance
+        {text}
       </text>
+      <polyline
+        points={`${far},${ulY} ${bend.x},${bend.y} ${tip.x},${tip.y}`}
+        fill="none"
+        strokeWidth={1.2}
+      />
+      <ArrowHead tip={tip} from={bend} />
     </g>
   );
 }
@@ -68,13 +126,13 @@ function nodeRadius(mu: number, lambda: number) {
   return Math.max(10, Math.min(NODE_R_MAX, gap / 2 - 2));
 }
 
-/** A caption anchor well clear of the hare lane, radially past a ring node,
- * clamped to stay inside the canvas. */
+/** Anchor for the "meeting" label — radially past the node, clear of the hare
+ * lane, clamped to stay inside the canvas with room for the underline. */
 function labelOut(i: number, mu: number, lambda: number) {
   const a = cycleAngle(i, mu, lambda);
-  const r = RING_R + 80;
-  const x = Math.min(Math.max(RING_CX - r * Math.cos(a), 40), VIEW_W - 40);
-  const y = Math.min(Math.max(RING_CY - r * Math.sin(a), 14), VIEW_H - 6);
+  const r = RING_R + 58;
+  const x = Math.min(Math.max(RING_CX - r * Math.cos(a), 60), VIEW_W - 60);
+  const y = Math.min(Math.max(RING_CY - r * Math.sin(a), 22), VIEW_H - 14);
   return { x, y };
 }
 
@@ -275,32 +333,34 @@ export function FloydView({
           );
         })}
 
-        {/* entrance flag — pulled down-left so it clears the ring arc, with a
-            thin leader arrow back to the entrance node */}
-        <EntranceFlag r={NODE_R} />
-        {frame.met && meetingNode !== entranceNode && (
-          <g fill="var(--tab-active)" stroke="var(--tab-active)">
-            <line
-              x1={nodePos(meetingNode, mu, lambda).x}
-              y1={nodePos(meetingNode, mu, lambda).y}
-              x2={labelOut(meetingNode, mu, lambda).x}
-              y2={labelOut(meetingNode, mu, lambda).y}
-              strokeWidth={1}
-              strokeDasharray="2,2"
-              opacity={0.5}
-            />
-            <text
-              x={labelOut(meetingNode, mu, lambda).x}
-              y={labelOut(meetingNode, mu, lambda).y}
-              fontSize={11}
-              textAnchor="middle"
-              dominantBaseline="central"
-              stroke="none"
-            >
-              meeting
-            </text>
-          </g>
-        )}
+        {/* entrance flag — down-left of the ring's left point, clear of the arc */}
+        <LeaderLabel
+          text="entrance"
+          tx={RING_CX - RING_R - 44}
+          ty={RING_CY + 44}
+          anchor="end"
+          node={{ x: RING_CX - RING_R, y: RING_CY }}
+          nodeR={NODE_R}
+          color="var(--match)"
+        />
+        {frame.met &&
+          meetingNode !== entranceNode &&
+          (() => {
+            const mn = nodePos(meetingNode, mu, lambda);
+            const lo = labelOut(meetingNode, mu, lambda);
+            const anchor = lo.x < mn.x ? 'end' : 'start';
+            return (
+              <LeaderLabel
+                text="meeting"
+                tx={lo.x}
+                ty={lo.y}
+                anchor={anchor}
+                node={mn}
+                nodeR={NODE_R}
+                color="var(--tab-active)"
+              />
+            );
+          })()}
 
         {/* pointers — animate along the ring, not in a straight chord */}
         <PointerMarker
