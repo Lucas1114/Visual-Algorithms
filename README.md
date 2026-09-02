@@ -43,3 +43,11 @@ Other scripts: `npm run build`, `npm test`, `npm run lint`.
 
 The 2021 site is plain static files — open `index.html` in a browser, or serve
 the repository root with any static file server.
+
+## License
+
+The code in this repository is MIT-licensed (see [`LICENSE`](LICENSE)). The
+2021 site kept under `/legacy/` vendors third-party libraries — jQuery, jQuery
+UI and fullPage.js (the last GPLv3 / commercial dual-licensed) — each under its
+own license; those files are retained only as an unaltered historical archive
+and the 2026 React app does not use them.
