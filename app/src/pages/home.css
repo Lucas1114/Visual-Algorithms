@@ -59,10 +59,8 @@ a.home__card:hover .home__card-thumb {
   background-repeat: no-repeat;
 }
 
-@media (prefers-color-scheme: dark) {
-  .home__card-thumb {
-    background-image: var(--thumb-dark);
-  }
+:root[data-theme='dark'] .home__card-thumb {
+  background-image: var(--thumb-dark);
 }
 
 .home__card-name {

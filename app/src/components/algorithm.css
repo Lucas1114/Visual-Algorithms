@@ -16,24 +16,22 @@
   --tab-active-text: #fff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --cell-fill: #1f2027;
-    --cell-stroke: #c9ccd4;
-    --cell-text: #f3f4f6;
-    --arrow: #f3f4f6;
+:root[data-theme='dark'] {
+  --cell-fill: #1f2027;
+  --cell-stroke: #c9ccd4;
+  --cell-text: #f3f4f6;
+  --arrow: #f3f4f6;
 
-    --match: #7bd88f;
-    --match-fill: #2f6b41;
-    --mismatch: #f28b82;
-    --mismatch-fill: #7a3330;
-    --highlight-fill: #6b5f22;
+  --match: #7bd88f;
+  --match-fill: #2f6b41;
+  --mismatch: #f28b82;
+  --mismatch-fill: #7a3330;
+  --highlight-fill: #6b5f22;
 
-    --panel-bg: #1c1d23;
-    --tab-bg: #24262e;
-    --tab-active: #f28b82;
-    --tab-active-text: #16171d;
-  }
+  --panel-bg: #1c1d23;
+  --tab-bg: #24262e;
+  --tab-active: #f28b82;
+  --tab-active-text: #16171d;
 }
 
 .algo {

@@ -7,15 +7,13 @@
   --floyd-node-dim: #8a919e;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --floyd-hare: #fb923c;
-    --floyd-tort: #60a5fa;
-    --floyd-tail: #60a5fa;
-    --floyd-arc-x: #f28b82;
-    --floyd-arc-rest: #c084fc;
-    --floyd-node-dim: #6b7280;
-  }
+:root[data-theme='dark'] {
+  --floyd-hare: #fb923c;
+  --floyd-tort: #60a5fa;
+  --floyd-tail: #60a5fa;
+  --floyd-arc-x: #f28b82;
+  --floyd-arc-rest: #c084fc;
+  --floyd-node-dim: #6b7280;
 }
 
 .floyd-page {

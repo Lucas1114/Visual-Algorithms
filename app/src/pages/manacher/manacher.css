@@ -12,18 +12,16 @@
   --proof-query: #c07000;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --flow-node: #838c9c;
-    --flow-node-fill: #2f333f;
-    --flow-node-text: #d3d8e0;
-    --flow-node-active-fill: #612f2f;
-    --flow-node-active-text: #f3f4f6;
-    --flow-edge: #6b7484;
+:root[data-theme='dark'] {
+  --flow-node: #838c9c;
+  --flow-node-fill: #2f333f;
+  --flow-node-text: #d3d8e0;
+  --flow-node-active-fill: #612f2f;
+  --flow-node-active-text: #f3f4f6;
+  --flow-edge: #6b7484;
 
-    --proof-accent: #8fb4ff;
-    --proof-query: #e0a52e;
-  }
+  --proof-accent: #8fb4ff;
+  --proof-query: #e0a52e;
 }
 
 .manacher-page {

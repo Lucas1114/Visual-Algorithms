@@ -14,13 +14,49 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #f3f4f6;
-    --bg: #16171d;
-  }
+/* Theme is driven by data-theme on <html> (set before paint in index.html,
+   toggled by the button). It starts from the OS setting, so both schemes are
+   still automatic on first visit. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --text: #f3f4f6;
+  --bg: #16171d;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 body {
   margin: 0;
+}
+
+/* Fixed sun / moon theme switch, on every page. */
+.theme-toggle {
+  position: fixed;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: 50%;
+  background: var(--bg);
+  color: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+}
+
+.theme-toggle:hover {
+  border-color: color-mix(in srgb, currentColor 65%, transparent);
+}
+
+.theme-toggle svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
 }
