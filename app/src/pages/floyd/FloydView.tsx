@@ -10,6 +10,7 @@ import {
   RING_CX,
   RING_CY,
   RING_R,
+  TAIL_SPAN,
   TAIL_X0,
   VIEW_H,
   VIEW_W,
@@ -17,7 +18,17 @@ import {
 import { PointerMarker, type Move } from './PointerMarker';
 import { TrackDerivation } from './TrackDerivation';
 
-const NODE_R = 15;
+const NODE_R_MAX = 15;
+
+/** Node radius shrinks when the tail or the ring gets crowded, so a long
+ * string's circles don't pile on top of each other. */
+function nodeRadius(mu: number, lambda: number) {
+  const gap = Math.min(
+    mu > 0 ? TAIL_SPAN / mu : Infinity,
+    lambda > 0 ? (2 * Math.PI * RING_R) / lambda : Infinity,
+  );
+  return Math.max(10, Math.min(NODE_R_MAX, gap / 2 - 2));
+}
 
 /** A caption anchor well clear of the hare lane, radially past a ring node,
  * clamped to stay inside the canvas. */
@@ -84,6 +95,7 @@ export function FloydView({
   );
 
   const nodes = Array.from({ length: lens }, (_, i) => i);
+  const NODE_R = nodeRadius(mu, lambda);
 
   return (
     <div className="floyd-view">
@@ -163,11 +175,19 @@ export function FloydView({
           </>
         )}
 
-        {/* nodes */}
+        {/* nodes — the circle is split in half: letter on top, index below, so
+            neither the moving pointers nor the ring arc can ever hide the
+            index (the 2021 build kept the index in a floating label and it got
+            covered). */}
         {nodes.map((i) => {
           const p = nodePos(i, mu, lambda);
           const isEntrance = i === entranceNode;
           const isMeeting = frame.met && i === meetingNode;
+          const stroke = isMeeting
+            ? 'var(--tab-active)'
+            : isEntrance
+              ? 'var(--match)'
+              : 'var(--cell-stroke)';
           return (
             <g key={i}>
               <circle
@@ -181,35 +201,35 @@ export function FloydView({
                       ? 'var(--match-fill)'
                       : 'var(--cell-fill)'
                 }
-                stroke={
-                  isMeeting
-                    ? 'var(--tab-active)'
-                    : isEntrance
-                      ? 'var(--match)'
-                      : 'var(--cell-stroke)'
-                }
+                stroke={stroke}
                 strokeWidth={2}
+              />
+              <line
+                x1={p.x - NODE_R}
+                y1={p.y}
+                x2={p.x + NODE_R}
+                y2={p.y}
+                stroke={stroke}
+                strokeWidth={1}
               />
               <text
                 x={p.x}
-                y={p.y}
-                fontSize={13}
+                y={p.y - NODE_R * 0.42}
+                fontSize={Math.max(9, NODE_R * 0.92)}
                 textAnchor="middle"
                 dominantBaseline="central"
                 fill="var(--cell-text)"
               >
                 {labels[i]}
               </text>
-              {/* The entrance always sits on the ring's left point, where a
-                  label centred above would run along the arc — shift it left
-                  (same height as the tail numbers) to clear it. */}
               <text
-                x={isEntrance ? p.x - NODE_R - 4 : p.x}
-                y={p.y - NODE_R - 6}
-                fontSize={10}
-                textAnchor={isEntrance ? 'end' : 'middle'}
+                x={p.x}
+                y={p.y + NODE_R * 0.46}
+                fontSize={Math.max(7, NODE_R * 0.62)}
+                textAnchor="middle"
+                dominantBaseline="central"
                 fill="var(--cell-text)"
-                opacity={0.5}
+                opacity={0.6}
               >
                 {i}
               </text>

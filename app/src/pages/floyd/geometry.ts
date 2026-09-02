@@ -9,14 +9,17 @@
  * smaller numbers, one place.
  */
 
-export const RING_R = 150;
-export const RING_CX = 452;
-export const RING_CY = 214;
-export const TAIL_SPAN = 250;
+export const RING_R = 190;
+export const RING_CX = 630;
+export const RING_CY = 220;
+export const TAIL_SPAN = 400;
 export const TAIL_X0 = RING_CX - RING_R - TAIL_SPAN;
 
-export const VIEW_W = 700;
-export const VIEW_H = 428;
+// Wide and low, with tight margins — the ρ figure spans x 40..820, y 30..410,
+// so a long string's tail nodes and the ring both get more room instead of
+// sitting in a band down the middle.
+export const VIEW_W = 860;
+export const VIEW_H = 440;
 
 /** How far the hare / tortoise markers sit off the node ring. */
 export const LANE_OFFSET = 26;
