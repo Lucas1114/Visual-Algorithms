@@ -102,7 +102,7 @@ export function FloydPage() {
           </li>
         </ol>
 
-        {labels && cycle != null && (
+        {labels != null && cycle != null && (
           <FloydView key={`${labels}:${cycle}`} labels={labels} cycle={cycle} />
         )}
       </div>

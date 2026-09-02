@@ -74,6 +74,15 @@ export function FloydView({
   const inDerive = frame.deriveCase != null;
   const showRest = inDerive && (frame.deriveCase as number) >= 1;
 
+  // The distance-identity panel keeps building through the derive frames, then
+  // stays on screen (fully expanded) while the regroup / converge animation
+  // plays out — viewers reaching the diagram late still want the legend. It
+  // clears only on Reset (step 0).
+  const derivePanelCase = Math.max(
+    -1,
+    ...run.frames.slice(0, player.step + 1).map((f) => f.deriveCase ?? -1),
+  );
+
   const nodes = Array.from({ length: lens }, (_, i) => i);
 
   return (
@@ -191,11 +200,14 @@ export function FloydView({
               >
                 {labels[i]}
               </text>
+              {/* The entrance always sits on the ring's left point, where a
+                  label centred above would run along the arc — shift it left
+                  (same height as the tail numbers) to clear it. */}
               <text
-                x={p.x}
+                x={isEntrance ? p.x - NODE_R - 4 : p.x}
                 y={p.y - NODE_R - 6}
                 fontSize={10}
-                textAnchor="middle"
+                textAnchor={isEntrance ? 'end' : 'middle'}
                 fill="var(--cell-text)"
                 opacity={0.5}
               >
@@ -258,33 +270,38 @@ export function FloydView({
         />
       </Canvas>
 
-      <div className="floyd-readout">
-        <span>
-          <span className="floyd-dot floyd-dot--tort" /> <strong>Tortoise</strong>{' '}
-          {frame.tortSteps} step{frame.tortSteps === 1 ? '' : 's'}
-        </span>
-        <span>
-          <span className="floyd-dot floyd-dot--hare" /> <strong>Hare</strong>{' '}
-          {frame.hareSteps} step{frame.hareSteps === 1 ? '' : 's'} (×
-          {frame.hareSpeed})
-        </span>
+      {/* On a wide screen this column sits beside the canvas so the diagram,
+          caption and step buttons are all on screen at once. */}
+      <div className="floyd-panel">
+        <div className="floyd-readout">
+          <span>
+            <span className="floyd-dot floyd-dot--tort" />{' '}
+            <strong>Tortoise</strong> {frame.tortSteps} step
+            {frame.tortSteps === 1 ? '' : 's'}
+          </span>
+          <span>
+            <span className="floyd-dot floyd-dot--hare" /> <strong>Hare</strong>{' '}
+            {frame.hareSteps} step{frame.hareSteps === 1 ? '' : 's'} (×
+            {frame.hareSpeed})
+          </span>
+        </div>
+
+        <p className="floyd-caption">{frame.caption}</p>
+
+        {/* Controls stay put — the derivation panel grows *below* them so the
+            button row never shifts as more equation rows appear. */}
+        <StepController player={player} />
+
+        {derivePanelCase >= 0 && (
+          <TrackDerivation
+            deriveCase={derivePanelCase}
+            mu={mu}
+            lambda={lambda}
+            loops={loops}
+            offset={meetOffset}
+          />
+        )}
       </div>
-
-      <p className="floyd-caption">{frame.caption}</p>
-
-      {/* Controls stay put — the derivation panel grows *below* them so the
-          button row never shifts as more equation rows appear. */}
-      <StepController player={player} />
-
-      {inDerive && (
-        <TrackDerivation
-          deriveCase={frame.deriveCase as number}
-          mu={mu}
-          lambda={lambda}
-          loops={loops}
-          offset={meetOffset}
-        />
-      )}
     </div>
   );
 }
