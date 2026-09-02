@@ -18,6 +18,44 @@ import {
 import { PointerMarker, type Move } from './PointerMarker';
 import { TrackDerivation } from './TrackDerivation';
 
+/** "entrance" label, parked down and left of the ring's left point (clear of
+ * the arc that runs through a label placed straight below it) with a short
+ * arrow leading back to the node. */
+function EntranceFlag({ r }: { r: number }) {
+  const nodeX = RING_CX - RING_R;
+  const nodeY = RING_CY;
+  const tip = { x: nodeX - 4, y: nodeY + r + 3 };
+  const tail = { x: nodeX - 42, y: nodeY + 44 };
+  const dx = tip.x - tail.x;
+  const dy = tip.y - tail.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const head = 6;
+  return (
+    <g stroke="var(--match)" fill="var(--match)">
+      <line x1={tail.x} y1={tail.y} x2={tip.x} y2={tip.y} strokeWidth={1} />
+      <path
+        d={`M ${tip.x} ${tip.y} L ${tip.x - head * ux + head * 0.6 * -uy} ${
+          tip.y - head * uy + head * 0.6 * ux
+        } L ${tip.x - head * ux - head * 0.6 * -uy} ${
+          tip.y - head * uy - head * 0.6 * ux
+        } Z`}
+        stroke="none"
+      />
+      <text
+        x={tail.x + 2}
+        y={tail.y + 4}
+        fontSize={11}
+        textAnchor="end"
+        stroke="none"
+      >
+        entrance
+      </text>
+    </g>
+  );
+}
+
 const NODE_R_MAX = 15;
 
 /** Node radius shrinks when the tail or the ring gets crowded, so a long
@@ -237,16 +275,9 @@ export function FloydView({
           );
         })}
 
-        {/* entrance flag — parked below the ring's left point, clear of nodes */}
-        <text
-          x={RING_CX - RING_R}
-          y={RING_CY + NODE_R + 22}
-          fontSize={11}
-          textAnchor="middle"
-          fill="var(--match)"
-        >
-          entrance
-        </text>
+        {/* entrance flag — pulled down-left so it clears the ring arc, with a
+            thin leader arrow back to the entrance node */}
+        <EntranceFlag r={NODE_R} />
         {frame.met && meetingNode !== entranceNode && (
           <g fill="var(--tab-active)" stroke="var(--tab-active)">
             <line
