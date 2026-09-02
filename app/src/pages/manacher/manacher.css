@@ -35,10 +35,16 @@
   max-width: 90rem;
 }
 
-/* Setup header: the string form on the left, the transformed-string index
-   picker on the right, so the picker no longer eats a full row of height and
-   the walkthrough below sits higher on the page. */
+/* Setup header: step 1 (string form) and step 2 (index picker) side by side,
+   step 3 below, so the picker no longer eats a full row of height and the
+   walkthrough below sits higher on the page. */
 .manacher-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.manacher-setup__top {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem 2rem;
@@ -50,7 +56,7 @@
   flex-direction: column;
   gap: 0.5rem;
   font-size: 0.92rem;
-  max-width: 26rem;
+  max-width: 28rem;
 }
 
 .manacher-setup__picker {
@@ -58,13 +64,50 @@
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.92rem;
-  flex: 1 1 30rem;
+  /* cap near the picker's natural width so cells render about 1:1 and don't
+     balloon on a wide monitor */
+  flex: 1 1 34rem;
+  max-width: 66rem;
   min-width: 0;
 }
 
 .manacher-step {
-  margin: 0;
-  line-height: 1.45;
+  margin: -0.1rem -0.4rem;
+  padding: 0.1rem 0.4rem;
+  line-height: 1.5;
+  border-radius: 0.3rem;
+  /* One-time nudge: the three step lines flash once when the page first loads
+     (element mount) and settle — they don't flash again until a reload. */
+  animation: manacher-step-intro 2s ease-in-out 0.3s 1 both;
+}
+
+@keyframes manacher-step-intro {
+  0%,
+  100% {
+    background: transparent;
+  }
+  45% {
+    background: color-mix(in srgb, var(--highlight-fill) 60%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manacher-step {
+    animation: none;
+  }
+}
+
+.manacher-step__n {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.03em 0.4em;
+  border-radius: 0.25rem;
+  background: var(--tab-bg);
+  border: 1px solid var(--cell-stroke);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .manacher-cta {

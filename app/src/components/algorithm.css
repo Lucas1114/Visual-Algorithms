@@ -164,24 +164,6 @@
   cursor: not-allowed;
 }
 
-/* Until the visitor first touches the transport, pulse the live buttons so
-   it's clear that's the next thing to do. */
-.step-controller--attention button:not(:disabled) {
-  animation: step-attention 1.5s ease-in-out infinite;
-}
-
-@keyframes step-attention {
-  0%,
-  100% {
-    border-color: var(--cell-stroke);
-    box-shadow: 0 0 0 0 transparent;
-  }
-  50% {
-    border-color: var(--tab-active);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tab-active) 35%, transparent);
-  }
-}
-
 .step-controller__count {
   font-variant-numeric: tabular-nums;
   opacity: 0.7;
@@ -206,11 +188,5 @@
 @media (prefers-reduced-motion: reduce) {
   .algo-move {
     transition: none;
-  }
-
-  .step-controller--attention button:not(:disabled) {
-    animation: none;
-    border-color: var(--tab-active);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tab-active) 30%, transparent);
   }
 }

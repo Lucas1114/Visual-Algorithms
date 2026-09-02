@@ -8,6 +8,10 @@ import { ManacherView } from './ManacherView';
 import './manacher.css';
 
 const MAX_LEN = 11;
+/** Transformed-string length for the longest allowed input — the index picker
+ * is always drawn to this width so a cell stays the same size whatever the
+ * string length (it only scales with the page). */
+const MAX_S = 2 * MAX_LEN + 1;
 const LABEL_W = 96;
 /** Default palindrome centre for the string that loads first — a diff-border
  * case, so the walkthrough opens on the proof animation (the page's highlight). */
@@ -23,8 +27,6 @@ export function ManacherPage() {
   const [draft, setDraft] = useState(DEFAULT_INPUT);
   const [input, setInput] = useState(DEFAULT_INPUT);
   const [centerIndex, setCenterIndex] = useState(DEFAULT_CENTER);
-  // The step buttons pulse until the visitor first uses them (once per session).
-  const [touched, setTouched] = useState(false);
 
   const build = () => {
     if (!draft) return;
@@ -33,55 +35,69 @@ export function ManacherPage() {
     setCenterIndex(draft.length);
   };
 
+  const restoreDefault = () => {
+    setDraft(DEFAULT_INPUT);
+    setInput(DEFAULT_INPUT);
+    setCenterIndex(DEFAULT_CENTER);
+  };
+
   return (
     <AlgorithmLayout title="Manacher">
       <div className="manacher-page">
         <div className="manacher-setup">
-          <div className="manacher-setup__form">
-            <p className="manacher-step">
-              Type a string (letters only, up to {MAX_LEN}) and click Start — or
-              just keep the default.
-            </p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                build();
-              }}
-            >
-              <input
-                aria-label="string"
-                value={draft}
-                onChange={(e) => setDraft(sanitize(e.target.value))}
-                placeholder={DEFAULT_INPUT}
+          <div className="manacher-setup__top">
+            <div className="manacher-setup__form">
+              <p className="manacher-step">
+                <b className="manacher-step__n">Step 1</b> Type a string (letters
+                only, up to {MAX_LEN}) and click Start — or click Default to
+                restore the original.
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  build();
+                }}
+              >
+                <input
+                  aria-label="string"
+                  value={draft}
+                  onChange={(e) => setDraft(sanitize(e.target.value))}
+                  placeholder={DEFAULT_INPUT}
+                />
+                <button type="submit" disabled={!draft}>
+                  Start
+                </button>
+                <button type="button" onClick={restoreDefault}>
+                  Default
+                </button>
+              </form>
+            </div>
+
+            <div className="manacher-setup__picker">
+              <p className="manacher-step">
+                <b className="manacher-step__n">Step 2</b>{' '}
+                <mark className="manacher-cta">Click an index</mark> of the
+                transformed string to choose the palindrome centre. The default
+                string reaches every branch of the algorithm — try a few.
+              </p>
+              <CenterPicker
+                input={input}
+                selected={centerIndex}
+                onSelect={setCenterIndex}
               />
-              <button type="submit" disabled={!draft}>
-                Start
-              </button>
-            </form>
-            <p className="manacher-step">
-              Then step through how the radius at that centre is found.
-            </p>
+            </div>
           </div>
 
-          <div className="manacher-setup__picker">
-            <p className="manacher-step">
-              <mark className="manacher-cta">Click an index</mark> of the
-              transformed string to choose the palindrome centre.
-            </p>
-            <CenterPicker
-              input={input}
-              selected={centerIndex}
-              onSelect={setCenterIndex}
-            />
-          </div>
+          <p className="manacher-step">
+            <b className="manacher-step__n">Step 3</b> Step through the walk with
+            the controls below.
+          </p>
         </div>
 
         <ManacherView
           key={`${input}:${centerIndex}`}
           input={input}
           centerIndex={centerIndex}
-          attention={!touched}
-          onFirstAction={() => setTouched(true)}
         />
       </div>
     </AlgorithmLayout>
@@ -104,8 +120,9 @@ function CenterPicker({
 }) {
   const { s } = useMemo(() => manacher(input), [input]);
 
-  const lens = s.length;
-  const width = LABEL_W + lens * SIDE + 24;
+  // Fixed to the longest allowed string so the cells never resize with the
+  // input length; short strings just leave the right of the strip empty.
+  const width = LABEL_W + MAX_S * SIDE + 24;
   const height = SIDE * 2 + 48;
   const col = (i: number) => LABEL_W + cellX(i);
 

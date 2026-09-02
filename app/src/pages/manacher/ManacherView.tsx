@@ -25,14 +25,9 @@ const center = (i: number) => LABEL_W + cellCenterX(i);
 export function ManacherView({
   input,
   centerIndex,
-  attention = false,
-  onFirstAction,
 }: {
   input: string;
   centerIndex: number;
-  /** Pulse the step buttons to show they're the next thing to touch. */
-  attention?: boolean;
-  onFirstAction?: () => void;
 }) {
   const { s, p } = useMemo(() => manacher(input), [input]);
   const run = useMemo(
@@ -80,11 +75,7 @@ export function ManacherView({
         {/* Controls sit above the canvas so the "step through…" instruction
             leads straight into them, and the derivation panel below never
             shifts the button row. */}
-        <StepController
-          player={player}
-          attention={attention}
-          onAction={onFirstAction}
-        />
+        <StepController player={player} />
 
         <Canvas width={width} height={height}>
           {/* row labels */}
