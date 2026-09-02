@@ -77,8 +77,9 @@ export function ManacherPage() {
               <p className="manacher-step">
                 <b className="manacher-step__n">Step 2</b>{' '}
                 <mark className="manacher-cta">Click an index</mark> of the
-                transformed string to choose the palindrome centre. The default
-                string reaches every branch of the algorithm — try a few.
+                transformed string to pick the palindrome centre. Different
+                centres take different paths through the flowchart — the default
+                string can reach every one, so try a few.
               </p>
               <CenterPicker
                 input={input}
