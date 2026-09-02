@@ -125,6 +125,8 @@ for (const target of TARGETS) {
     await sleep(400);
     await target.prepare(page);
     await sleep(1000); // let CSS transitions / the step-intro flash settle
+    // the theme switch is page chrome, not content — keep it out of the preview
+    await page.evaluate(() => document.querySelector('.theme-toggle')?.remove());
     const png = join(outDir, `${target.name}-${scheme}.png`);
     await page.screenshot({ path: png, clip: CLIP });
     await page.close();
