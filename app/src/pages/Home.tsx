@@ -41,6 +41,10 @@ export function Home() {
       <p className="home__meta">
         <Link to="/about">About this project</Link>
         <span aria-hidden="true"> · </span>
+        <a href="https://github.com/Lucas1114/Visual-Algorithms">
+          Source on GitHub
+        </a>
+        <span aria-hidden="true"> · </span>
         <a href="/legacy/">See the original 2021 version →</a>
       </p>
       <ul className="home__list">
