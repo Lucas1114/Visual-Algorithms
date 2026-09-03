@@ -1,7 +1,72 @@
 .home {
   max-width: 44rem;
-  margin: 4rem auto;
+  margin: 2.5rem auto 4rem;
   padding: 0 1.25rem;
+}
+
+/* Mirrors the banner the legacy build carries pointing back here. */
+.home__banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.7rem;
+  margin: 0 3rem 2.25rem 0; /* keep clear of the fixed theme toggle */
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.home__banner:hover {
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.home__banner span:first-child {
+  opacity: 0.75;
+}
+
+.home__banner-cta {
+  font-weight: 600;
+  color: var(--tab-active, #c62828);
+}
+
+.home__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+}
+
+.home__head h1 {
+  margin: 0;
+}
+
+.home__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  white-space: nowrap;
+}
+
+.home__chip svg {
+  display: block;
+  opacity: 0.8;
+}
+
+.home__chip:hover {
+  border-color: var(--tab-active, #c62828);
 }
 
 .home__lead {
@@ -11,11 +76,16 @@
 
 .home__meta {
   font-size: 0.9rem;
-  opacity: 0.85;
 }
 
 .home__meta a {
-  color: inherit;
+  color: var(--tab-active, #c62828);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home__meta a:hover {
+  text-decoration: underline;
 }
 
 .home__list {
