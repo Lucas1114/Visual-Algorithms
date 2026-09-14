@@ -1,5 +1,8 @@
 # Visual Algorithms
 
+[![CI](https://github.com/Lucas1114/Visual-Algorithms/actions/workflows/ci.yml/badge.svg)](https://github.com/Lucas1114/Visual-Algorithms/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **[Live demo](https://visual-algorithms-sandy.vercel.app)** &nbsp;·&nbsp;
 [the original 2021 build](https://visual-algorithms-sandy.vercel.app/legacy/)
 
